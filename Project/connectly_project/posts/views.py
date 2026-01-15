@@ -30,7 +30,7 @@ def create_user(request):
             return JsonResponse({'id': user.id, 'message': 'User created successfully'}, status = 201)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status = 400)
-    else:   #handles get methods
+    else:
         return JsonResponse({'error': 'Method not allowed'}, status = 405)
 
 #Retrieve all Posts (GET)
@@ -56,5 +56,5 @@ def create_post(request):
             return JsonResponse({'error':'Author not found'}, status = 404)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status = 400)
-    else:   #handles get methods
+    else:
         return JsonResponse({'error': 'Method not allowed'}, status = 405)
