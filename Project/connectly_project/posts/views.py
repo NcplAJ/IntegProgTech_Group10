@@ -1,11 +1,15 @@
 from django.shortcuts import render
 
 # Create your views here.
+import json
 
 from django.http import JsonResponse
 from .models import User
+from .models import Post
+from django.views.decorators.csrf import csrf_exempt
 
-#Retrieve all users (GET)
+
+        #Retrieve all users (GET)
 def get_users(request):
 
     try:
@@ -15,11 +19,11 @@ def get_users(request):
         return JsonResponse ({'error': str(e)}, status = 500)
 
 
-#Create a user (POST)
-import json
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from .models import User
+        #Create a user (POST)
+# import json
+# from django.http import JsonResponse
+# from django.views.decorators.csrf import csrf_exempt
+# from .models import User
 
 @csrf_exempt
 def create_user(request):
@@ -33,8 +37,8 @@ def create_user(request):
     else:
         return JsonResponse({'error': 'Method not allowed'}, status = 405)
 
-#Retrieve all Posts (GET)
-from .models import Post
+        #Retrieve all Posts (GET)
+# from .models import Post
 def get_posts(request):
     try:
         posts = list(Post.objects.values('id','content','author','created_at'))
@@ -43,7 +47,7 @@ def get_posts(request):
         return JsonResponse({'error', str(e)}, status = 500)
 
 
-#Create a Post (POST)
+        #Create a Post (POST)
 @csrf_exempt
 def create_post(request):
     if request.method == 'POST':
