@@ -37,6 +37,42 @@ def create_user(request):
     else:
         return JsonResponse({'error': 'Method not allowed'}, status = 405)
 
+
+        #Update a User (Update)
+@csrf_exempt
+def update_user(request, id):
+    if request.method == 'PUT':
+        try:
+            data = json.loads(request.body)
+            user = User.objects.get(id=id)
+
+            user.username = data.get('username', user.username)
+            user.email = data.get('email', user.email)
+            user.save()
+
+            return JsonResponse({'message': 'User updated successfully'})
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    else:
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+        #Delete a User (Delete)
+@csrf_exempt
+def delete_user(request, id):
+    if request.method == 'DELETE':
+        try:
+            user = User.objects.get(id=id)
+            user.delete()
+            return JsonResponse({'message': 'User deleted successfully'})
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+    else:
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
         #Retrieve all Posts (GET)
 # from .models import Post
 def get_posts(request):
@@ -62,3 +98,5 @@ def create_post(request):
             return JsonResponse({'error': str(e)}, status = 400)
     else:
         return JsonResponse({'error': 'Method not allowed'}, status = 405)
+    
+
