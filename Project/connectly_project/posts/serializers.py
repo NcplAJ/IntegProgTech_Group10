@@ -1,11 +1,10 @@
 from rest_framework import serializers
 from .models import User, Post, Comment
 
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'created_at']  #the expected input
+        fields = ['username', 'email']  #the expected input | Removed sensitive fields
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -13,7 +12,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'content', 'author', 'created_at', 'comments']
+        fields = ['content', 'author', 'created_at', 'comments']
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -22,7 +21,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
             model = Comment
-            fields = ['id', 'text', 'author', 'post', 'created_at']
+            fields = ['text', 'author', 'post', 'created_at']
 
     def validate_post(self, value):
         if not Post.objects.filter(id=value.id).exists():
@@ -33,3 +32,7 @@ class CommentSerializer(serializers.ModelSerializer):
         if not User.objects.filter(id=value.id).exists():
             raise serializers.ValidationError("Author not found.")
         return value
+    
+
+
+

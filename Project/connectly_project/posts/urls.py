@@ -1,9 +1,9 @@
 from django.urls import path
 # from . import views
-from .views import UserListCreate, PostListCreate, CommentListCreate #DRF ver
+from .views import UserListCreate, PostListCreate, CommentListCreate, LoginView, ProtectedView #DRF ver
 
 urlpatterns = [
-    #User
+    #User (OLD)
     # path('users/', views.get_users, name = 'get_users'),
     # path('users/create/', views.create_user, name = 'create_user'),
     # path('user/update/<int:id>/', views.update_user),
@@ -17,5 +17,8 @@ urlpatterns = [
     path('users/', UserListCreate.as_view(), name='user-list-create'),
     path('posts/', PostListCreate.as_view(), name='post-list-create'),
     path('comments/', CommentListCreate.as_view(), name='comment-list-create'),
+    path('login/', LoginView.as_view(), name='login'),
+    path("protected/", ProtectedView.as_view(), name="protected"),
+    
 
 ]

@@ -3,109 +3,25 @@
 # Create your views here.
 # import json
 
-# from django.http import JsonResponse
-# from .models import User
-# from .models import Post
-# from django.views.decorators.csrf import csrf_exempt
 
-#         #Retrieve all users (GET)
-# def get_users(request):
-
-#     try:
-#         users = list (User.objects.values('id', 'username','email','created_at'))
-#         return JsonResponse (users, safe = False)
-#     except Exception as e:
-#         return JsonResponse ({'error': str(e)}, status = 500)
-
-
-#         #Create a user (POST)
-# # import json
-# # from django.http import JsonResponse
-# # from django.views.decorators.csrf import csrf_exempt
-# # from .models import User
-
-# @csrf_exempt
-# def create_user(request):
-#     if request.method == 'POST':
-#         try:
-#             data = json.loads(request.body)
-#             user = User.objects.create(username=data['username'], email = data['email'])
-#             return JsonResponse({'id': user.id, 'message': 'User created successfully'}, status = 201)
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status = 400)
-#     else:
-#         return JsonResponse({'error': 'Method not allowed'}, status = 405)
-
-
-#         #Update a User (Update)
-# @csrf_exempt
-# def update_user(request, id):
-#     if request.method == 'PUT':
-#         try:
-#             data = json.loads(request.body)
-#             user = User.objects.get(id=id)
-
-#             user.username = data.get('username', user.username)
-#             user.email = data.get('email', user.email)
-#             user.save()
-
-#             return JsonResponse({'message': 'User updated successfully'})
-#         except User.DoesNotExist:
-#             return JsonResponse({'error': 'User not found'}, status=404)
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status=400)
-#     else:
-#         return JsonResponse({'error': 'Method not allowed'}, status=405)
-
-
-#         #Delete a User (Delete)
-# @csrf_exempt
-# def delete_user(request, id):
-#     if request.method == 'DELETE':
-#         try:
-#             user = User.objects.get(id=id)
-#             user.delete()
-#             return JsonResponse({'message': 'User deleted successfully'})
-#         except User.DoesNotExist:
-#             return JsonResponse({'error': 'User not found'}, status=404)
-#     else:
-#         return JsonResponse({'error': 'Method not allowed'}, status=405)
-
-
-#         #Retrieve all Posts (GET)
-# # from .models import Post
-# def get_posts(request):
-#     try:
-#         posts = list(Post.objects.values('id','content','author','created_at'))
-#         return JsonResponse(posts, safe = False)
-#     except Exception as e:
-#         return JsonResponse({'error', str(e)}, status = 500)
-
-
-#         #Create a Post (POST)
-# @csrf_exempt
-# def create_post(request):
-#     if request.method == 'POST':
-#         try:
-#             data = json.loads(request.body)
-#             author = User.objects.get(id = data['author'])
-#             post = Post.objects.create(content = data['content'], author = author)
-#             return JsonResponse({'id': post.id, 'message': 'Post created successfully'}, status = 201)
-#         except User.DoesNotExist:
-#             return JsonResponse({'error':'Author not found'}, status = 404)
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status = 400)
-#     else:
-#         return JsonResponse({'error': 'Method not allowed'}, status = 405)
-    
-#UPDATED VERSION
 #Validation and Rational Logic | Using Django REST Framework
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import User, Post, Comment
 from .serializers import UserSerializer, PostSerializer, CommentSerializer
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login
 
+#Restrict Access with RBAC
+from rest_framework.permissions import IsAuthenticated
+from .permissions import IsPostAuthor
+
+#Secure API Endpoints
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+
+from .authentication import CsrfExemptSessionAuthentication
 
 class UserListCreate (APIView):
     def get(self, request):
@@ -119,7 +35,19 @@ class UserListCreate (APIView):
             serializer.save()
             return Response (serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
+        # username = request.data.get("username")
+        # password = request.data.get("password")
+        # email = request.data.get("email")
+
+        # if not username or not password:
+        #     return Response({"error": "Username and password are required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # #built in Django create_user
+        # user = User.objects.create_user(username=username, password=password, email=email)
+
+        # return Response({"id":user.id, "username":user.username, "email":user.email, "message":"User created successfully"}, status=status.HTTP_201_CREATED)
 
 class PostListCreate(APIView):
     def get(self, request):
@@ -147,3 +75,38 @@ class CommentListCreate(APIView):
             return Response(serializer.data,status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
+class LoginView(APIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+
+        if not username or not password:
+            return Response({"error": "Username and password required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return Response({"message": "Authentication successful"})
+        else:
+            return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+
+class PostDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsPostAuthor]
+
+    def get(self, request, pk):
+        post = Post.objects.get(pk=pk)
+        self.check_object_permissions(request, post)
+        return Response({"content": post.content})
+    
+
+#Secure API Endpoints
+class ProtectedView(APIView):
+    # authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({"message": "Authenticated"})
