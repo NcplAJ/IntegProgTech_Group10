@@ -1,6 +1,6 @@
 from django.urls import path
 # from . import views
-from .views import UserListCreate, PostListCreate, CommentListCreate, LoginView, ProtectedView #DRF ver
+from .views import UserListCreate, PostListCreate, CommentListCreate, LoginView, ProtectedView, CreatePostView
 
 urlpatterns = [
     #User (OLD)
@@ -19,6 +19,6 @@ urlpatterns = [
     path('comments/', CommentListCreate.as_view(), name='comment-list-create'),
     path('login/', LoginView.as_view(), name='login'),
     path("protected/", ProtectedView.as_view(), name="protected"),
-    
+    path("create/", CreatePostView.as_view(), name="factory-create-post"),
 
 ]

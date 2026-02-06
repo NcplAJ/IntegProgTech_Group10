@@ -23,6 +23,10 @@ from rest_framework.permissions import IsAuthenticated
 
 from .authentication import CsrfExemptSessionAuthentication
 
+#Design Patters
+from .factories.post_factory import PostFactory
+
+
 class UserListCreate (APIView):
     def get(self, request):
         users = User.objects.all()
@@ -35,19 +39,6 @@ class UserListCreate (APIView):
             serializer.save()
             return Response (serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-        # username = request.data.get("username")
-        # password = request.data.get("password")
-        # email = request.data.get("email")
-
-        # if not username or not password:
-        #     return Response({"error": "Username and password are required"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # #built in Django create_user
-        # user = User.objects.create_user(username=username, password=password, email=email)
-
-        # return Response({"id":user.id, "username":user.username, "email":user.email, "message":"User created successfully"}, status=status.HTTP_201_CREATED)
 
 class PostListCreate(APIView):
     def get(self, request):
@@ -77,7 +68,7 @@ class CommentListCreate(APIView):
     
 
 class LoginView(APIView):
-    authentication_classes = [CsrfExemptSessionAuthentication]
+    authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
     def post(self, request):
         username = request.data.get("username")
         password = request.data.get("password")
@@ -110,3 +101,31 @@ class ProtectedView(APIView):
 
     def get(self, request):
         return Response({"message": "Authenticated"})
+    
+
+#Factory Pattern
+class CreatePostView(APIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+
+    def post (self, request):
+        data = request.data
+        user = request.user
+
+        if not user.is_authenticated:
+            return Response({"error": "Not authenticated"}, status=401)
+        
+        author = user
+
+        try:
+            post = PostFactory.create_post(
+                post_type=data['post_type'],
+                title=data['title'],
+                content=data.get('content', ''),
+                metadata=data.get('metadata', {}),
+                author=author
+            )
+            return Response({'message': 'Post created successfully!', 'post_id': post.id}, 
+                            status=status.HTTP_201_CREATED)
+        
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

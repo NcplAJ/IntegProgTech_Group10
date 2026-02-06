@@ -1,18 +1,19 @@
 from django.db import models
-
+from django.contrib.auth.models import User
 # Create your models here.
 
-class User (models.Model):  #Models = column in a table / database
-    username = models.CharField(max_length = 100, unique = True)    #User's unique name
-    email = models.EmailField(unique = True)    #User's unique email
-    created_at = models.DateTimeField(auto_now_add = True)  #Timestamp when the user was created
+# class User (models.Model):  #Models = column in a table / database
+#     username = models.CharField(max_length = 100, unique = True)    #User's unique name
+#     email = models.EmailField(unique = True)    #User's unique email
+#     created_at = models.DateTimeField(auto_now_add = True)  #Timestamp when the user was created
 
-    def __str__(self):  #special method to control returned when converting an object to a string
-        return self.username
+#     def __str__(self):  #special method to control returned when converting an object to a string
+#         return self.username
     
 
+
 # class Post(models.Model):
-#     content = models.TextField()    #The text conent of the post
+#     content = models.TextField()    #The text content of the post
 #     author = models.ForeignKey(User, on_delete=models.CASCADE)  #the user who created the post
 #     created_at = models.DateTimeField(auto_now_add=True)    #Timestamp when the post was created
 
@@ -21,9 +22,21 @@ class User (models.Model):  #Models = column in a table / database
     
 
 class Post (models.Model):
-    content = models.TextField()    #The text conent of the post
+    Text = "text"
+    Image = "image"
+    Video = "video"
+
+    POST_TYPES =[('text', "Text"), ('image', "Image"), ('video', "Video"),]
+
+
+    content = models.TextField()    #The text content of the post
     author = models.ForeignKey(User, related_name='posts', on_delete=models.CASCADE)  #the user who created the post
     created_at = models.DateTimeField(auto_now_add=True)    #Timestamp when the post was created
+
+    #Factory Pattern update
+    post_type = models.CharField(max_length=10, choices=POST_TYPES, default=Text)
+    metadata = models.JSONField(default=dict, blank=True)
+    title = models.CharField(max_length=200, default="Untitled")
 
     def __str__(self):
         return f"Post by {self.author.username} at {self.created_at}"
@@ -38,3 +51,5 @@ class Comment (models.Model):
     def __str__ (self):
         return f"Comment by {self.author.username} on Post {self.post.id}"
     
+
+
