@@ -3,12 +3,11 @@
 # Create your views here.
 # import json
 
-
 #Validation and Rational Logic | Using Django REST Framework
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import User, Post, Comment
+from .models import Post, Comment
 from .serializers import UserSerializer, PostSerializer, CommentSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
@@ -26,7 +25,11 @@ from .authentication import CsrfExemptSessionAuthentication
 #Design Patters
 from .factories.post_factory import PostFactory
 
+#Update | Delete
+from rest_framework import generics
 
+
+#USER
 class UserListCreate (APIView):
     def get(self, request):
         users = User.objects.all()
@@ -39,33 +42,6 @@ class UserListCreate (APIView):
             serializer.save()
             return Response (serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class PostListCreate(APIView):
-    def get(self, request):
-        posts = Post.objects.all()
-        serializer = PostSerializer(posts, many=True)
-        return Response(serializer.data)
-    
-    def post(self, request):
-        serializer = PostSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-class CommentListCreate(APIView):
-    def get(self, request):
-        comments = Comment.objects.all()
-        serializer = CommentSerializer(comments, many=True)
-        return Response(serializer.data)
-    
-    def post(self, request):
-        serializer = CommentSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data,status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 
 class LoginView(APIView):
     authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
@@ -83,16 +59,6 @@ class LoginView(APIView):
             return Response({"message": "Authentication successful"})
         else:
             return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-        
-
-class PostDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsPostAuthor]
-
-    def get(self, request, pk):
-        post = Post.objects.get(pk=pk)
-        self.check_object_permissions(request, post)
-        return Response({"content": post.content})
-    
 
 #Secure API Endpoints
 class ProtectedView(APIView):
@@ -101,10 +67,28 @@ class ProtectedView(APIView):
 
     def get(self, request):
         return Response({"message": "Authenticated"})
-    
 
-#Factory Pattern
-class CreatePostView(APIView):
+
+
+#COMMENT
+class CommentListCreate(APIView):
+    def get(self, request):
+        comments = Comment.objects.all()
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request):
+        serializer = CommentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data,status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+    
+#POST
+#Factory Pattern | Create
+class CreatePostView(APIView):  #create using factories
     authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
 
     def post (self, request):
@@ -129,3 +113,15 @@ class CreatePostView(APIView):
         
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+#Post Update | Delete
+class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated, IsPostAuthor]
+
+#Post Get
+class PostListCreate(generics.ListCreateAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
