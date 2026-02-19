@@ -7,13 +7,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Post, Comment
-from .serializers import UserSerializer, PostSerializer, CommentSerializer
+from .models import Post, Comment, Like
+from .serializers import UserSerializer, PostSerializer, CommentSerializer, LikeSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 
 #Restrict Access with RBAC
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .permissions import IsPostAuthor, IsCommentAuthor
 
 #Secure API Endpoints
@@ -24,12 +24,13 @@ from .authentication import CsrfExemptSessionAuthentication
 
 #Design Patterns
 from .factories.post_factory import PostFactory
+from .factories.comment_factory import CommentFactory   #Factory Updated Comments
+from .factories.like_factory import LikeFactory
 
 #Update | Delete
 from rest_framework import generics
 
-#Factory Updated Comments
-from .factories.comment_factory import CommentFactory
+
 
 
 
@@ -154,3 +155,54 @@ class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated, IsCommentAuthor]
+
+
+
+#LIKES
+#Like Create
+class LikePostView(APIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+
+    def post(self, request, post_id):   #Like
+        
+        user = request.user
+
+        print(request.user)
+        print(request.user.is_authenticated)
+        
+        try:
+            post = Post.objects.get(id=post_id)
+            like = LikeFactory.create_like(user, post)
+            return Response({"message": "Post liked", "likes_count": post.likes.count()}, status=201)
+        
+        except Post.DoesNotExist:
+            return Response({"error": "Post not found"}, status=404)
+        
+        except ValueError as e:
+            return Response({"error": str(e)}, status=400)
+        
+    def delete(self, request, post_id): #Unlike | Remove Like
+        
+        user = request.user
+        
+        try:
+            post = Post.objects.get(id=post_id)
+            LikeFactory.remove_like(user, post)
+            return Response({"message": "Like removed", "likes_count": post.likes.count()}, status=200)
+        
+        except Post.DoesNotExist:
+            return Response({"error": "Post not found"}, status=404)
+        
+        except ValueError as e:
+            return Response({"error": str(e)}, status=400)
+
+
+#Like Read
+class PostLikesListView(generics.ListAPIView):  #View/List Likes
+    serializer_class = LikeSerializer
+
+    def get_queryset(self):
+        post_id = self.kwargs['post_id']
+        return Like.objects.filter(post_id=post_id)

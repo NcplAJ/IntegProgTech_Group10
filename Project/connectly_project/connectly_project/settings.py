@@ -122,7 +122,7 @@ STATIC_URL = 'static/'
 
 
 #Django HTTPS
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
@@ -137,3 +137,16 @@ PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
     'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
 ]
+
+
+# CSRF_TRUSTED_ORIGINS = [
+#     "https://127.0.0.1:8000",
+#     "https://localhost:8000",
+# ]
+
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': [
+#         'rest_framework.authentication.BasicAuthentication',
+#         # or TokenAuthentication if you prefer
+#     ],
+# }

@@ -1,18 +1,10 @@
 from django.urls import path
-from .views import UserListCreate, LoginView, ProtectedView, CreatePostView, PostDetailView, PostListCreate, CommentListView,  CreateCommentView, CommentDetailView
+from .views import (UserListCreate, LoginView, ProtectedView, 
+                    CreatePostView, PostDetailView, PostListCreate, 
+                    CommentListView,  CreateCommentView, CommentDetailView, 
+                    LikePostView, PostLikesListView)
 
 urlpatterns = [
-    #User (OLD)
-    # path('users/', views.get_users, name = 'get_users'),
-    # path('users/create/', views.create_user, name = 'create_user'),
-    # path('user/update/<int:id>/', views.update_user),
-    # path('user/delete/<int:id>/', views.delete_user),
-
-    # #Posts
-    # path('posts/', views.get_posts, name = 'get_posts'),
-    # path('posts/create/', views.create_post, name = 'create_post'),
-
-    #DRF Ver
     path('users/', UserListCreate.as_view(), name='user-list-create'),
     
     
@@ -28,4 +20,9 @@ urlpatterns = [
     path('comments/', CommentListView.as_view(), name='comment-list'),  #Get Comments
     path('comments/create/', CreateCommentView.as_view(), name='comment-create'),   #Post Comments
     path('comments/<int:pk>/', CommentDetailView.as_view(), name="comment-detail"),  #Comment Update | Delete
+
+    #Likes
+    path('<int:post_id>/like/', PostLikesListView.as_view(), name='post-likes'),   
+    path('<int:post_id>/likes/', LikePostView.as_view(), name="like-post"), #Like and Unlike
+
 ]

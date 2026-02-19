@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Post, Comment
+from .models import User, Post, Comment, Like
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -9,10 +9,16 @@ class UserSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     comments = serializers.StringRelatedField(many=True, read_only=True)
+    likes_count = serializers.SerializerMethodField()   #Added Likes
 
     class Meta:
         model = Post
-        fields = ['content', 'author', 'created_at', 'comments']
+        # fields = ['content', 'author', 'created_at', 'comments']
+        fields = "__all__"
+        read_only_fields = ["author", "created_at", "likes_count"] #to prevent clients from manually setting it
+
+    def get_likes_count(self, obj):
+        return obj.likes.count()
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -34,5 +40,9 @@ class CommentSerializer(serializers.ModelSerializer):
         return value
     
 
-
+class LikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Like
+        fields = ['id','user','post','created_at']
+        read_only_fields = ['user','created_at']
 
