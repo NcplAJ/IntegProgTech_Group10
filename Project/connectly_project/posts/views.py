@@ -20,7 +20,7 @@ from .permissions import IsPostAuthor, IsCommentAuthor
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from .authentication import CsrfExemptSessionAuthentication
+# from .authentication import CsrfExemptSessionAuthentication
 
 #Design Patterns
 from .factories.post_factory import PostFactory
@@ -31,6 +31,13 @@ from .factories.like_factory import LikeFactory
 from rest_framework import generics
 
 
+#3rd PT Integration
+from dj_rest_auth.registration.views import SocialLoginView
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+import requests
+# from django.conf import settings
+from rest_framework.authtoken.models import Token
 
 
 
@@ -49,7 +56,8 @@ class UserListCreate (APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
-    authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    # authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    authentication_classes = [TokenAuthentication]
     def post(self, request):
         username = request.data.get("username")
         password = request.data.get("password")
@@ -67,7 +75,7 @@ class LoginView(APIView):
 
 #Secure API Endpoints
 class ProtectedView(APIView):
-    # authentication_classes = [TokenAuthentication]
+    authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -78,7 +86,8 @@ class ProtectedView(APIView):
 #POST
 #Factory Pattern | Create Post
 class CreatePostView(APIView):  #create using factories
-    authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    # authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    authentication_classes = [TokenAuthentication]
 
     def post (self, request):
         data = request.data
@@ -105,7 +114,9 @@ class CreatePostView(APIView):  #create using factories
         
 #Post Update | Delete
 class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
-    authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    # authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    authentication_classes = [TokenAuthentication]
+
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated, IsPostAuthor]
@@ -125,7 +136,8 @@ class CommentListView(generics.ListAPIView):
     
 #Factory Pattern | Create Comments
 class CreateCommentView(APIView):
-    authentication_classes = [CsrfExemptSessionAuthentication]
+    # authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -151,7 +163,8 @@ class CreateCommentView(APIView):
         
 #Comment Update | Delete
 class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
-    authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    # authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    authentication_classes = [TokenAuthentication]
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated, IsCommentAuthor]
@@ -161,7 +174,8 @@ class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
 #LIKES
 #Like Create
 class LikePostView(APIView):
-    authentication_classes = [CsrfExemptSessionAuthentication]
+    # authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
 
@@ -206,3 +220,10 @@ class PostLikesListView(generics.ListAPIView):  #View/List Likes
     def get_queryset(self):
         post_id = self.kwargs['post_id']
         return Like.objects.filter(post_id=post_id)
+    
+
+#3rd PT Integration
+class GoogleLogin(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+    client_class = OAuth2Client
+    callback_url = "https://127.0.0.1:8000/posts/auth/google/callback/"

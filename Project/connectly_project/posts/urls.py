@@ -1,8 +1,10 @@
-from django.urls import path
+from django.urls import path, include
 from .views import (UserListCreate, LoginView, ProtectedView, 
                     CreatePostView, PostDetailView, PostListCreate, 
                     CommentListView,  CreateCommentView, CommentDetailView, 
-                    LikePostView, PostLikesListView)
+                    LikePostView, PostLikesListView,
+                    GoogleLogin)
+
 
 urlpatterns = [
     path('users/', UserListCreate.as_view(), name='user-list-create'),
@@ -25,4 +27,8 @@ urlpatterns = [
     path('<int:post_id>/like/', PostLikesListView.as_view(), name='post-likes'),   
     path('<int:post_id>/likes/', LikePostView.as_view(), name="like-post"), #Like and Unlike
 
+    #3rd PT Integration
+    path('auth/google/', GoogleLogin.as_view(), name='google_login'),
+    path('accounts/', include('allauth.urls')),
+    path('auth/user/', include('dj_rest_auth.urls')), #User profile | Note: use 'auth/user/user/
 ]

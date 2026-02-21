@@ -41,6 +41,19 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'django_extensions',
+
+    'django.contrib.sites',
+    'rest_framework.authtoken',
+
+    #3rd PT integration
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google', #https://docs.allauth.org/en/dev/socialaccount/providers/google.html
+
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
+
 ]
 
 MIDDLEWARE = [
@@ -51,6 +64,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    #3rd PT Integ
+    'allauth.account.middleware.AccountMiddleware',
+
 ]
 
 ROOT_URLCONF = 'connectly_project.urls'
@@ -139,14 +156,51 @@ PASSWORD_HASHERS = [
 ]
 
 
-# CSRF_TRUSTED_ORIGINS = [
-#     "https://127.0.0.1:8000",
-#     "https://localhost:8000",
-# ]
+#3rd PT integration
+SITE_ID = 1
 
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': [
-#         'rest_framework.authentication.BasicAuthentication',
-#         # or TokenAuthentication if you prefer
-#     ],
-# }
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES':(
+        'rest_framework.permissions.AllowAny',
+    ),
+}
+
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google':{
+        'APP':{
+            'client_id': '433618878663-h18e1omkvq1jvf1hu6fsemandhhvdm2i.apps.googleusercontent.com',
+            'secret': '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',
+            'key':''
+        }
+    }
+}
+
+REST_AUTH_REGISTER_SERIALIZERS = {}
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+
+#AI disclousure
+#account connecting | fix for "User is already registered with this e-mail address." postman error
+SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True   #allows login via social provider
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True  #links google acc to existing user
+
+
+REST_AUTH = {
+    'USE_JWT':False,
+    'USER_DETAILS_SERIALIZER': 'posts.serializers.UserSerializer',
+}
