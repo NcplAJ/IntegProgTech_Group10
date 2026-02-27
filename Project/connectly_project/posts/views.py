@@ -1,8 +1,3 @@
-# from django.shortcuts import render
-
-# Create your views here.
-# import json
-
 #Validation and Rational Logic | Using Django REST Framework
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -20,7 +15,7 @@ from .permissions import IsPostAuthor, IsCommentAuthor
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-# from .authentication import CsrfExemptSessionAuthentication
+from .authentication import CsrfExemptSessionAuthentication
 
 #Design Patterns
 from .factories.post_factory import PostFactory
@@ -57,7 +52,7 @@ class UserListCreate (APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
-    # authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    # authentication_classes = [CsrfExemptSessionAuthentication]  #Disabled for HTTPS Postman testing
     authentication_classes = [TokenAuthentication]
     def post(self, request):
         username = request.data.get("username")
@@ -69,8 +64,10 @@ class LoginView(APIView):
         user = authenticate(username=username, password=password)
 
         if user is not None:
-            login(request, user)
-            return Response({"message": "Authentication successful"})
+            # login(request, user)
+            token, created = Token.objects.get_or_create(user=user) #Get or creates token
+
+            return Response({"message": "Authentication successful", "token": token.key})
         else:
             return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -87,7 +84,7 @@ class ProtectedView(APIView):
 #POST
 #Factory Pattern | Create Post
 class CreatePostView(APIView):  #create using factories
-    # authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    # authentication_classes = [CsrfExemptSessionAuthentication]  #Disabled for HTTPS Postman testing
     authentication_classes = [TokenAuthentication]
 
     def post (self, request):
@@ -115,7 +112,7 @@ class CreatePostView(APIView):  #create using factories
         
 #Post Update | Delete
 class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
-    # authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    # authentication_classes = [CsrfExemptSessionAuthentication]  #Disabled for HTTPS Postman testing
     authentication_classes = [TokenAuthentication]
 
     queryset = Post.objects.all()
@@ -137,7 +134,7 @@ class CommentListView(generics.ListAPIView):
     
 #Factory Pattern | Create Comments
 class CreateCommentView(APIView):
-    # authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    # authentication_classes = [CsrfExemptSessionAuthentication]  #Disabled for HTTPS Postman testing
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -164,7 +161,7 @@ class CreateCommentView(APIView):
         
 #Comment Update | Delete
 class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
-    # authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    # authentication_classes = [CsrfExemptSessionAuthentication]  #Disabled for HTTPS Postman testing
     authentication_classes = [TokenAuthentication]
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
@@ -175,7 +172,7 @@ class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
 #LIKES
 #Like Create
 class LikePostView(APIView):
-    # authentication_classes = [CsrfExemptSessionAuthentication]  #For HTTPS Postman testing
+    # authentication_classes = [CsrfExemptSessionAuthentication]  #Disabled for HTTPS Postman testing
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -227,6 +224,7 @@ class PostLikesListView(generics.ListAPIView):  #View/List Likes
 class FeedView(generics.ListAPIView):
     serializer_class = PostFeedSerializer
     permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
 
     def get_queryset(self):
         queryset = Post.objects.annotate(
@@ -235,24 +233,21 @@ class FeedView(generics.ListAPIView):
         )
 
         liked_by = self.request.query_params.get("liked_by")
-        
         if liked_by:
             queryset = queryset.filter(likes__user_id=int(liked_by))
         
 
         commented_by = self.request.query_params.get("commented_by")
         if commented_by:
-            queryset = queryset.filter(author_id=int(commented_by))
+            queryset = queryset.filter(comments__author_id=int(commented_by))
 
 
         min_like_count = self.request.query_params.get("min_like_count")    #Note: Filter for "Minimum Like Count x"
-
         if min_like_count:
             queryset = queryset.filter(like_count__gte=int(min_like_count))
 
 
         min_comment_count = self.request.query_params.get("min_comment_count")  #Note: Filter for "Minimum Comment Count x"
-
         if min_comment_count:
             queryset = queryset.filter(comment_count__gte=int(min_comment_count))
 
@@ -268,7 +263,6 @@ class FeedView(generics.ListAPIView):
 
         return queryset
     
-
 
 #3rd PT Integration
 class GoogleLogin(SocialLoginView):

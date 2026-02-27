@@ -199,7 +199,7 @@ REST_AUTH_REGISTER_SERIALIZERS = {}
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 
 #AI disclousure
-#account connecting | fix for "User is already registered with this e-mail address." postman error
+#account connecting | Used tp identify and fix for "User is already registered with this e-mail address." postman error
 SOCIALACCOUNT_QUERY_EMAIL = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True   #allows login via social provider
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True  #links google acc to existing user
