@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Post, Comment, Like
-from .serializers import UserSerializer, PostSerializer, CommentSerializer, LikeSerializer
+from .serializers import UserSerializer, PostSerializer, CommentSerializer, LikeSerializer, PostFeedSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 
@@ -39,7 +39,8 @@ import requests
 # from django.conf import settings
 from rest_framework.authtoken.models import Token
 
-
+#Feed/Filter
+from django.db.models import Count
 
 #USER
 class UserListCreate (APIView):
@@ -221,6 +222,53 @@ class PostLikesListView(generics.ListAPIView):  #View/List Likes
         post_id = self.kwargs['post_id']
         return Like.objects.filter(post_id=post_id)
     
+
+#Feed View
+class FeedView(generics.ListAPIView):
+    serializer_class = PostFeedSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Post.objects.annotate(
+            like_count=Count("likes", distinct=True),
+            comment_count=Count("comments", distinct=True)
+        )
+
+        liked_by = self.request.query_params.get("liked_by")
+        
+        if liked_by:
+            queryset = queryset.filter(likes__user_id=int(liked_by))
+        
+
+        commented_by = self.request.query_params.get("commented_by")
+        if commented_by:
+            queryset = queryset.filter(author_id=int(commented_by))
+
+
+        min_like_count = self.request.query_params.get("min_like_count")    #Note: Filter for "Minimum Like Count x"
+
+        if min_like_count:
+            queryset = queryset.filter(like_count__gte=int(min_like_count))
+
+
+        min_comment_count = self.request.query_params.get("min_comment_count")  #Note: Filter for "Minimum Comment Count x"
+
+        if min_comment_count:
+            queryset = queryset.filter(comment_count__gte=int(min_comment_count))
+
+
+        ordering = self.request.query_params.get("ordering")
+
+        if ordering in ["like_count", "-like_count",
+                        "comment_count", "-comment_count",
+                        "created_at", "-created_at"]:
+            queryset = queryset.order_by(ordering)
+        else:
+            queryset = queryset.order_by("-created_at")
+
+        return queryset
+    
+
 
 #3rd PT Integration
 class GoogleLogin(SocialLoginView):

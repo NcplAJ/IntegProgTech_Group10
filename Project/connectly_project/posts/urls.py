@@ -3,7 +3,7 @@ from .views import (UserListCreate, LoginView, ProtectedView,
                     CreatePostView, PostDetailView, PostListCreate, 
                     CommentListView,  CreateCommentView, CommentDetailView, 
                     LikePostView, PostLikesListView,
-                    GoogleLogin)
+                    GoogleLogin, FeedView)
 
 
 urlpatterns = [
@@ -31,4 +31,7 @@ urlpatterns = [
     path('auth/google/', GoogleLogin.as_view(), name='google_login'),
     path('accounts/', include('allauth.urls')),
     path('auth/user/', include('dj_rest_auth.urls')), #User profile | Note: use 'auth/user/user/
+
+    #Feed
+    path('feed/', FeedView.as_view(), name='feed'),
 ]
