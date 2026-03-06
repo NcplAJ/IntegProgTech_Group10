@@ -77,7 +77,20 @@ Ensures resource efficiency and global consistency.
   
 **Database**: 
 - SQLite
-    
+
+**Requirements**:
+pip install django
+pip install djangorestframework  
+pip install django-extensions  
+pip install django-allauth
+pip install dj-rest-auth
+pip install requests
+pip install PyJWT
+pip install cryptography  
+pip install Werkzeug    
+pip install pyOpenSSL        
+pip install django-sslserver
+
 
 ## System Diagrams
 **Data Relationship Diagram**
