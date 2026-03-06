@@ -86,3 +86,16 @@ Ensures resource efficiency and global consistency.
 ![alt text](<docs/IPT Diagrams (Connectly) - CRUD Interaction Flow Diagram.png>)  
 **Authentication and Authorization Flow Diagram**
 ![alt text](<docs/IPT Diagrams (Connectly) - Authentication and Authorization Flow Diagram.png>)  
+
+## Requirements
+pip install django
+pip install djangorestframework  
+pip install django-extensions  
+pip install django-allauth
+pip install dj-rest-auth
+pip install requests
+pip install PyJWT
+pip install cryptography  
+pip install Werkzeug    
+pip install pyOpenSSL        
+pip install django-sslserver  
