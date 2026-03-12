@@ -1,1 +1,5 @@
 /Project/deleted
+*.pem
+*.key
+*.crt
+.env
