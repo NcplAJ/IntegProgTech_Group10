@@ -49,11 +49,11 @@ Ensures resource efficiency and global consistency.
 | auth/google/ |   POST   |            Google OAuth Login |
   
 **Social Resources**
-| Resource |      Create(POST)       | Read/Update/Delete(GET/PUT/DEL) |
-| :------- | :---------------------: | ------------------------------: |
-| Post     |     /posts/create/      |                  /posts/postid/ |
-| Comments | /posts/comments/create/ |      /posts/comments/commentid/ |
-| Likes    |  /posts/postid/likes/   |            /posts/postid/likes/ |
+| Resource |      Create(POST)       | Read/Update/Delete(GET/PUT/DEL) |         Read All |
+| :------- | :---------------------: | :-----------------------------: | ---------------: |
+| Post     |     /posts/create/      |         /posts/postid/          |          /posts/ |
+| Comments | /posts/comments/create/ |   /posts/comments/commentid/    | /posts/comments/ |
+| Likes    |  /posts/postid/likes/   |      /posts/postid/likes/       |               NA |
 
 **Feed and Filters**
 | Resource                |            Read(GET)             |                           Description |
