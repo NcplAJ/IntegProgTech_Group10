@@ -2,28 +2,45 @@
 
 ## Table of Contents
 - About the Project
+- Tech Stack
 - Key Features
 - System Architecture
 - Design Patterns
 - API Endpoints
-- Tech Stack
+- Role-based Access Control
+- Privacy and Visibilty
 - System Diagrams
+- Requirements
 
-## About the Project
-
+## About the Project  
 **Description**:
 - This is the backend API for the social media called Connectly. It utilizes Django 6.0 and Django REST Framework (DRF), factories, and Google OAuth integration.
 
+
+## Tech Stack  
+**Framework**: 
+- Django 
+- Django REST Framework
+    
+**Patterns**: 
+- Factory 
+- Singleton 
+- Serializer  
+  
+**Database**: 
+- SQLite
+  
 
 ## Key Features:
 - Factory Pattern Architecture: Decouples object creation from the view logic for Posts, Comments, and Likes.
 - Singleton Layer: A centralized configuration and logging services.
 - Feed System: Annotated query providing real-time metrics such as Likes and Comments, and a filter function.
 - Secure Authentication: 2-Layer security utilizing Google OAuth and DRF Token authentication.
-- RBAC: Object-level permissions ensuring users can only edit or delete their own posts.
+- RBAC: Three tier (Admin, User, Guest) system to manage user permissions.
+- Privacy and Visibility setting support.
 
 
-## System Architecture:
+## System Architecture: (To be Updated)
 - The system uses a layered approach where the Token Authentication protects the Views, and the system logic with RBAC. The logic is assigned to the Factories, and the global configurations with Singletons.  
 ![alt text](<docs/IPT Diagrams (Connectly) - System Architecture Diagram.png>)
 
@@ -31,7 +48,7 @@
 ## Design Patterns:
 **Factory Pattern**  
 Used to centralize entity creation.
-- PostFactory: Handles creation of posts.
+- PostFactory: Handles creation of posts including its privacy setting.
 - CommentFactory: Handles post comments.
 - LikeFactory: Handles post likes toggle.
   
@@ -40,6 +57,7 @@ Ensures resource efficiency and global consistency.
 - ConfigManager: Manages global settings.
 - LoggerSingleton: Provides a standardized logs format for the system.
   
+
 ## API Endpoints  
 **Users and Authentication**
 | Endpoint     |  Method  |                   Description |
@@ -65,21 +83,21 @@ Ensures resource efficiency and global consistency.
 | Filter by Like Count    |  /posts/feed/?min_like_count=#   |    Filter posts by minimum like count |
 
 
-## Tech Stack  
-**Framework**: 
-- Django 
-- Django REST Framework
-    
-**Patterns**: 
-- Factory 
-- Singleton 
-- Serializer  
-  
-**Database**: 
-- SQLite
+## Role-Based Access Control (RBAC)
+| Role  |                                                                                                                                                           Permissions |
+| :---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| Admin |                                                      Full Access. Admin can view all posts, update any content, and is the only role with the ability to delete posts |
+| User  | Can create posts, comments, and likes. Can view their own private post(s) and public content from others. Can delete their own comment(s) and reverse their own likes |
+| Guest |                                                    Read only access. Guests can only view public posts and comments and are blocked from creating or deleting content |
     
 
-## System Diagrams
+## Privacy and Visibility
+Posts now support privacy settings:  
+- Public: Visible to all users and guests in the feed.  
+- Private: Hidden from the general feed, only accessible to the author and admin users.
+
+
+## System Diagrams (To be Updated)
 **Data Relationship Diagram**
 ![alt text](<docs/IPT Diagrams (Connectly) - Data Relationship Diagram.png>)  
 **CRUD Interaction Flow Diagram**
@@ -87,8 +105,9 @@ Ensures resource efficiency and global consistency.
 **Authentication and Authorization Flow Diagram**
 ![alt text](<docs/IPT Diagrams (Connectly) - Authentication and Authorization Flow Diagram.png>)  
 
+
 ## Requirements
-pip install django
+pip install django  
 pip install djangorestframework  
 pip install django-extensions  
 pip install django-allauth
