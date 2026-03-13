@@ -1,7 +1,27 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 # Create your models here.
     
+#New RBACpy
+class User(AbstractUser):
+    class UserRole(models.TextChoices):
+        ADMIN = "ADMIN", "Admin"
+        USER = "USER", "User"
+        GUEST = "GUEST", "Guest"
+    
+    role = models.CharField(max_length=10, choices=UserRole.choices, default=UserRole.GUEST)
+
+    groups = models.ManyToManyField('auth.Group', related_name='posts_user_set', blank=True,
+                                    help_text='The groups this user belongs to.', verbose_name='groups',)
+
+    user_permissions = models.ManyToManyField('auth.Permission', related_name='posts_user_permissions_set', blank=True,
+                                                help_text='Specific permissions for this user.', verbose_name='user permissions',)
+
+#New Privacy
+class PrivacyLevel(models.TextChoices):
+    PUBLIC = "PUBLIC", "Public"
+    PRIVATE = "PRIVATE", "Private"
+
 
 class Post (models.Model):
     Text = "text"
@@ -9,6 +29,12 @@ class Post (models.Model):
     Video = "video"
 
     POST_TYPES =[('text', "Text"), ('image', "Image"), ('video', "Video"),]
+    #New
+    privacy = models.CharField(
+        max_length=10,
+        choices=PrivacyLevel.choices,
+        default=PrivacyLevel.PUBLIC
+    )
 
 
     content = models.TextField()    #The text content of the post

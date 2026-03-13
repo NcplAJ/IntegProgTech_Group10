@@ -1,8 +1,8 @@
-from ..models import Post
+from ..models import Post, PrivacyLevel
 
 class PostFactory:
     @staticmethod
-    def create_post(post_type, title, author, content='', metadata=None):
+    def create_post(post_type, title, author, content='', metadata=None, privacy="PUBLIC"):
         if post_type not in dict(Post.POST_TYPES):
             raise ValueError("Invalid post type")
         
@@ -19,6 +19,7 @@ class PostFactory:
             content=content,
             post_type=post_type,
             metadata=metadata,
-            author=author
+            author=author,
+            privacy=privacy
         )
     

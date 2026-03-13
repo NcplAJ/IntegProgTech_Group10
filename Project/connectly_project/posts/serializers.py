@@ -2,10 +2,20 @@ from rest_framework import serializers
 from .models import User, Post, Comment, Like
 
 class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
     class Meta:
         model = User
-        fields = ['username', 'email']  #the expected input | Removed sensitive fields
+        fields = ['username', 'email' , 'password', 'role']  #the expected input | Removed sensitive fields
 
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            role=validated_data.get('role', User.UserRole.GUEST)  #Default to GUEST if not provided
+        )
+        return user
 
 class PostSerializer(serializers.ModelSerializer):
     comments = serializers.StringRelatedField(many=True, read_only=True)

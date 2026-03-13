@@ -8,12 +8,12 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 
 #Restrict Access with RBAC
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from .permissions import IsPostAuthor, IsCommentAuthor
+from rest_framework.permissions import IsAuthenticated
+from .permissions import IsCommentAuthor #,IsPostAuthor
 
 #Secure API Endpoints
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from .authentication import CsrfExemptSessionAuthentication
 
@@ -36,6 +36,10 @@ from rest_framework.authtoken.models import Token
 
 #Feed/Filter
 from django.db.models import Count
+
+#RBAC and Privacy
+from .permissions import CanViewPost, IsNotGuest
+from django.db import models
 
 #USER
 class UserListCreate (APIView):
@@ -86,13 +90,12 @@ class ProtectedView(APIView):
 class CreatePostView(APIView):  #create using factories
     # authentication_classes = [CsrfExemptSessionAuthentication]  #Disabled for HTTPS Postman testing
     authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated, IsNotGuest]  #Added RBAC Guest Restriction
 
     def post (self, request):
         data = request.data
         user = request.user
 
-        if not user.is_authenticated:
-            return Response({"error": "Not authenticated"}, status=401)
         
         author = user
 
@@ -102,7 +105,8 @@ class CreatePostView(APIView):  #create using factories
                 title=data['title'],
                 content=data.get('content', ''),
                 metadata=data.get('metadata', {}),
-                author=author
+                author=author,
+                privacy=data.get('privacy', 'PUBLIC')   #Added Privacy Setting
             )
             return Response({'message': 'Post created successfully!', 'post_id': post.id}, 
                             status=status.HTTP_201_CREATED)
@@ -117,12 +121,29 @@ class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated, IsPostAuthor]
+    # permission_classes = [IsAuthenticated, IsPostAuthor]
+    permission_classes = [IsAuthenticatedOrReadOnly, CanViewPost]  #Updated Permissions
 
 #Post Get
 class PostListCreate(generics.ListCreateAPIView):
-    queryset = Post.objects.all()
+    # queryset = Post.objects.all()
     serializer_class = PostSerializer
+    #Added for security
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        user = self.request.user
+        #Admin
+        if user.is_authenticated and getattr(user, 'role', None) == 'ADMIN':
+            return Post.objects.all()
+        
+        #Public or own posts
+        return Post.objects.filter(models.Q(privacy="PUBLIC") | models.Q(author=user))
+    
+    #makes sure author is logged in
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
 
 
@@ -136,11 +157,12 @@ class CommentListView(generics.ListAPIView):
 class CreateCommentView(APIView):
     # authentication_classes = [CsrfExemptSessionAuthentication]  #Disabled for HTTPS Postman testing
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsNotGuest] 
 
     def post(self, request):
         data = request.data
         author = request.user
+
 
         try:
             post = Post.objects.get(id=data['post_id'])
@@ -165,7 +187,7 @@ class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = [TokenAuthentication]
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated, IsCommentAuthor]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsCommentAuthor]
 
 
 
@@ -174,12 +196,12 @@ class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
 class LikePostView(APIView):
     # authentication_classes = [CsrfExemptSessionAuthentication]  #Disabled for HTTPS Postman testing
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-
+    permission_classes = [IsAuthenticated, IsNotGuest]  #Added RBAC Guest Restriction
 
     def post(self, request, post_id):   #Like
         
         user = request.user
+
 
         print(request.user)
         print(request.user.is_authenticated)
@@ -223,11 +245,21 @@ class PostLikesListView(generics.ListAPIView):  #View/List Likes
 #Feed View
 class FeedView(generics.ListAPIView):
     serializer_class = PostFeedSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     authentication_classes = [TokenAuthentication]
 
     def get_queryset(self):
-        queryset = Post.objects.annotate(
+        #New
+        user = self.request.user
+                #check permissions
+        if user.is_authenticated and getattr(user, 'role', None) == 'ADMIN':
+            queryset = Post.objects.all()
+            
+        else:   #Show public or own posts
+            queryset = Post.objects.filter(models.Q(privacy="PUBLIC") | models.Q(author=user))
+        
+
+        queryset = queryset.annotate(
             like_count=Count("likes", distinct=True),
             comment_count=Count("comments", distinct=True)
         )

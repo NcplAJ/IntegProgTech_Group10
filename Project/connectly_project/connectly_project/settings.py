@@ -209,3 +209,5 @@ REST_AUTH = {
     'USE_JWT':False,
     'USER_DETAILS_SERIALIZER': 'posts.serializers.UserSerializer',
 }
+
+AUTH_USER_MODEL = 'posts.User'
