@@ -41,6 +41,12 @@ from django.db.models import Count
 from .permissions import CanViewPost, IsNotGuest
 from django.db import models
 
+#Performance Optimization
+from .singletons.pagination import StandardResultsSetPagination
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+
+
 #USER
 class UserListCreate (APIView):
     def get(self, request):
@@ -242,11 +248,18 @@ class PostLikesListView(generics.ListAPIView):  #View/List Likes
         return Like.objects.filter(post_id=post_id)
     
 
+
 #Feed View
 class FeedView(generics.ListAPIView):
+    #Caching
+    @method_decorator(cache_page(60 * 10)) #(seconds * X)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
     serializer_class = PostFeedSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     authentication_classes = [TokenAuthentication]
+    pagination_class = StandardResultsSetPagination #Pagination
 
     def get_queryset(self):
         #New
@@ -301,3 +314,4 @@ class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
     client_class = OAuth2Client
     callback_url = "https://127.0.0.1:8000/posts/auth/google/callback/"
+
