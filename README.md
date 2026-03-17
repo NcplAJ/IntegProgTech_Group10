@@ -9,12 +9,14 @@
 - API Endpoints
 - Role-based Access Control
 - Privacy and Visibilty
+- Pagination
+- Caching
 - System Diagrams
 - Requirements
 
 ## About the Project  
 **Description**:
-- This is the backend API for the social media called Connectly. It utilizes Django 6.0 and Django REST Framework (DRF), factories, and Google OAuth integration.
+- This is the backend API for the social media called Connectly. It utilizes Django 6.0 and Django REST Framework (DRF), factories, singletons, and Google OAuth integration.
 
 
 ## Tech Stack  
@@ -56,6 +58,7 @@ Used to centralize entity creation.
 Ensures resource efficiency and global consistency.  
 - ConfigManager: Manages global settings.
 - LoggerSingleton: Provides a standardized logs format for the system.
+- Pagination: Allows for the feed to load up to 10 posts per page to improve load times and user experience.
   
 
 ## API Endpoints  
@@ -76,7 +79,7 @@ Ensures resource efficiency and global consistency.
 **Feed and Filters**
 | Resource                |            Read(GET)             |                           Description |
 | :---------------------- | :------------------------------: | ------------------------------------: |
-| Feed                    |           /posts/feed/           |                         Get all posts |
+| Feed                    |       /posts/feed/?page=#        |                         Get all posts |
 | Comment Filter by User  | /posts/feed/?commented_by=userid |        Get posts commented by user id |
 | Likes Filter by User    |   /posts/feed/?liked_by=userid   |            Get posts liked by user id |
 | Filter by Comment Count | /posts/feed/?min_comment_count=# | Filter posts by minimum comment count |
@@ -97,7 +100,19 @@ Posts now support privacy settings:
 - Private: Hidden from the general feed, only accessible to the author and admin users.
 
 
-## System Diagrams (To be Updated)
+## Pagination  
+Feed now support pagination via singleton:  
+- Global implementation.
+- Up to 10 posts per feed page. (Adjustable in the "page_size" parameter inside pagination.py under singetons folder)
+
+
+## Caching  
+Feed now support caching for faster load times on frequent queries:
+- Cache duration: 10 minutes. (Adjustable under FeedView method decorator)
+- Caching drawback: Page updates may take upto 10 minutes to reflect cached pages.
+
+
+## System Diagrams
 **Data Relationship Diagram**
 ![alt text](<docs/IPT Diagrams (Connectly) - Data Relationship Diagram.png>)  
 **CRUD Interaction Flow Diagram**
