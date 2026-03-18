@@ -2,7 +2,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Post, Comment, Like
+from .models import Post, Comment, Like, PrivacyLevel
 from .serializers import UserSerializer, PostSerializer, CommentSerializer, LikeSerializer, PostFeedSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
@@ -45,6 +45,7 @@ from django.db import models
 from .singletons.pagination import StandardResultsSetPagination
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
 
 
 #USER
@@ -252,7 +253,8 @@ class PostLikesListView(generics.ListAPIView):  #View/List Likes
 #Feed View
 class FeedView(generics.ListAPIView):
     #Caching
-    @method_decorator(cache_page(60 * 10)) #(seconds * X)
+    @method_decorator(cache_page(60 * 5)) #(seconds * X)
+    @method_decorator(vary_on_headers('Authorization',))
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
 
@@ -264,13 +266,20 @@ class FeedView(generics.ListAPIView):
     def get_queryset(self):
         #New
         user = self.request.user
-                #check permissions
+        print(f"Request by: {user} | Role: {getattr(user, 'role', 'None')}")    #Debug
+
+                #Allow Admin to see all posts
         if user.is_authenticated and getattr(user, 'role', None) == 'ADMIN':
             queryset = Post.objects.all()
-            
-        else:   #Show public or own posts
-            queryset = Post.objects.filter(models.Q(privacy="PUBLIC") | models.Q(author=user))
+
+                #Allow User can see public and own posts
+        elif user.is_authenticated:   #Show own posts + public posts
+            queryset = Post.objects.filter(models.Q(privacy=PrivacyLevel.PUBLIC) | models.Q(author=user))
+
+        else:   #Allow Guest can see public posts
+            queryset = Post.objects.filter(privacy=PrivacyLevel.PUBLIC)
         
+        print(f"Base Queryset Count: {queryset.count()}")   #Debug
 
         queryset = queryset.annotate(
             like_count=Count("likes", distinct=True),

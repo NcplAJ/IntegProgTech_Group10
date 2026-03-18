@@ -15,7 +15,6 @@ class CanViewPost(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
 
         #Admin
-        # if request.user.role =='ADMIN' or obj.author == request.user:
         if getattr(request.user, 'role', None) == 'ADMIN':
             return True
         #Restrict Delete to admin only
@@ -41,3 +40,5 @@ class IsNotGuest(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return str(getattr(request.user, 'role', None)).upper() != 'GUEST'
+    
+    
